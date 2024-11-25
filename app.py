@@ -8,17 +8,22 @@ from functools import wraps
 import os
 from flask import request
 from werkzeug.utils import secure_filename
-import base64
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})  # Ajusta los orígenes según sea necesario
 
 # Configuración de la conexión a la base de datos
-db_config = {
+db_config1 = {
     'host': 'localhost',
     'user': 'root',
     'password': '',
     'database': 'paso_db'
+}
+db_config = {
+    'host': 'sql3.freemysqlhosting.net',
+    'user': 'sql3747431',
+    'password': '9y5KxSxbML',
+    'database': 'sql3747431'
 }
 
 # Decorador para proteger las rutas con autenticación JWT
