@@ -28,6 +28,309 @@ db_config = {
     'database': 'sql3747431'
 }
 
+# Configuración para Swagger
+SWAGGER_URL = '/api/docs'  # URL para acceder a la documentación
+API_URL = '/swagger'  # URL permanente para obtener el JSON de Swagger
+
+swaggerui_blueprint = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config={'app_name': "API Documentation"}
+)
+
+app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+
+@app.route('/swagger')
+def swagger_spec():
+    return jsonify({
+        "swagger": "2.0",
+        "info": {
+            "version": "1.0",
+            "title": "API Paso"
+        },
+        "paths": {
+            "/login": {
+                "post": {
+                    "summary": "Login",
+                    "description": "User login endpoint",
+                    "responses": {
+                        "200": {"description": "Successful login"}
+                    }
+                },
+            },
+            "/register": {
+                "post": {
+                    "summary": "Register",
+                    "description": "User registration endpoint",
+                    "responses": {
+                        "201": {"description": "Successful registration"}
+                    }
+                },
+            },
+            "/registrarViaje": {
+                "post": {
+                    "summary": "Registrar Viaje",
+                    "description": "Endpoint para registrar un nuevo viaje",
+                    "responses": {
+                        "201": {"description": "Viaje registrado exitosamente"}
+                    }
+                },
+            },
+            "/viajes/recientes": {
+                "get": {
+                    "summary": "Viajes Recientes",
+                    "description": "Obtener los 10 viajes más recientes",
+                    "responses": {
+                        "200": {"description": "Lista de viajes"}
+                    }
+                },
+            },
+            "/viajes": {
+                "get": {
+                    "summary": "Filtrar Viajes",
+                    "description": "Obtener viajes filtrados por destino y fecha de llegada",
+                    "responses": {
+                        "200": {"description": "Lista de viajes"}
+                    }
+                },
+            },
+            "/profile": {
+                "get": {
+                    "summary": "Perfil",
+                    "description": "Obtener el perfil del usuario autenticado",
+                    "responses": {
+                        "200": {"description": "Perfil del usuario"}
+                    }
+                },
+            },
+            "/update-profile-image": {
+                "put": {
+                    "summary": "Actualizar Imagen de Perfil",
+                    "description": "Actualizar la imagen de perfil del usuario autenticado",
+                    "responses": {
+                        "200": {"description": "Imagen actualizada exitosamente"}
+                    }
+                },
+            },
+            "/viaje/detalle/{trip_id}": {
+                "get": {
+                    "summary": "Detalles del Viaje",
+                    "description": "Obtener los detalles de un viaje específico",
+                    "responses": {
+                        "200": {"description": "Detalles del viaje"}
+                    }
+                },
+            },
+            "/calificarConductor": {
+                "post": {
+                    "summary": "Calificar Conductor",
+                    "description": "Calificar al conductor de un viaje",
+                    "responses": {
+                        "200": {"description": "Calificación actualizada correctamente"}
+                    }
+                },
+            },
+            "/get-tiendas": {
+                "get": {
+                    "summary": "Obtener Tiendas",
+                    "description": "Obtener tiendas filtradas por nombre, ciudad y calificación",
+                    "responses": {
+                        "200": {"description": "Lista de tiendas"}
+                    }
+                },
+            },
+            "/store-details": {
+                "get": {
+                    "summary": "Detalles de Tienda",
+                    "description": "Obtener los detalles de una tienda específica",
+                    "responses": {
+                        "200": {"description": "Detalles de la tienda"}
+                    }
+                },
+            },
+            "/products": {
+                "get": {
+                    "summary": "Obtener Productos",
+                    "description": "Obtener productos de una tienda específica",
+                    "responses": {
+                        "200": {"description": "Lista de productos"}
+                    }
+                },
+            },
+            "/cards/add": {
+                "post": {
+                    "summary": "Añadir Tarjeta",
+                    "description": "Añadir una nueva tarjeta de crédito",
+                    "responses": {
+                        "201": {"description": "Tarjeta añadida exitosamente"}
+                    }
+                },
+            },
+            "/cards": {
+                "get": {
+                    "summary": "Listar Tarjetas",
+                    "description": "Obtener las tarjetas de crédito del usuario autenticado",
+                    "responses": {
+                        "200": {"description": "Lista de tarjetas"}
+                    }
+                },
+            },
+            "/cards/delete/{card_id}": {
+                "put": {
+                    "summary": "Desactivar Tarjeta",
+                    "description": "Desactivar una tarjeta de crédito",
+                    "responses": {
+                        "200": {"description": "Tarjeta desactivada exitosamente"}
+                    }
+                },
+            },
+            "/enviarPedido": {
+                "post": {
+                    "summary": "Enviar Pedido",
+                    "description": "Enviar un nuevo pedido",
+                    "responses": {
+                        "201": {"description": "Pedido enviado exitosamente"}
+                    }
+                },
+            },
+            "/pedidos/pendientes": {
+                "get": {
+                    "summary": "Pedidos Pendientes",
+                    "description": "Obtener los pedidos pendientes del usuario autenticado",
+                    "responses": {
+                        "200": {"description": "Lista de pedidos"}
+                    }
+                },
+            },
+            "/pedidos/aceptados": {
+                "get": {
+                    "summary": "Pedidos Aceptados",
+                    "description": "Obtener los pedidos aceptados del usuario autenticado",
+                    "responses": {
+                        "200": {"description": "Lista de pedidos"}
+                    }
+                },
+            },
+            "/pedidos/rechazados": {
+                "get": {
+                    "summary": "Pedidos Rechazados",
+                    "description": "Obtener los pedidos rechazados del usuario autenticado",
+                    "responses": {
+                        "200": {"description": "Lista de pedidos"}
+                    }
+                },
+            },
+            "/pedidos/en-progreso": {
+                "get": {
+                    "summary": "Pedidos en Progreso",
+                    "description": "Obtener los pedidos en progreso del usuario autenticado",
+                    "responses": {
+                        "200": {"description": "Lista de pedidos"}
+                    }
+                },
+            },
+            "/viajes/en-progreso": {
+                "get": {
+                    "summary": "Viajes en Progreso",
+                    "description": "Obtener los viajes en progreso del usuario autenticado",
+                    "responses": {
+                        "200": {"description": "Lista de viajes"}
+                    }
+                },
+            },
+            "/notificaciones/descartar/{order_id}": {
+                "put": {
+                    "summary": "Descartar Notificación",
+                    "description": "Descartar una notificación de pedido",
+                    "responses": {
+                        "200": {"description": "Notificación descartada exitosamente"}
+                    }
+                },
+            },
+            "/pedidos/{order_id}/estado": {
+                "put": {
+                    "summary": "Actualizar Estado de Pedido",
+                    "description": "Actualizar el estado de un pedido",
+                    "responses": {
+                        "200": {"description": "Estado actualizado correctamente"}
+                    }
+                },
+            },
+            "/pedidos/{order_id}/entregado": {
+                "put": {
+                    "summary": "Marcar Pedido como Entregado",
+                    "description": "Marcar un pedido como entregado",
+                    "responses": {
+                        "200": {"description": "Pedido marcado como entregado con éxito"}
+                    }
+                },
+            },
+            "/producto/{product_id}": {
+                "get": {
+                    "summary": "Obtener Producto",
+                    "description": "Obtener un producto por su ID",
+                    "responses": {
+                        "200": {"description": "Detalles del producto"}
+                    }
+                },
+            },
+            "/usuario/{user_id}": {
+                "get": {
+                    "summary": "Obtener Usuario",
+                    "description": "Obtener un usuario por su ID",
+                    "responses": {
+                        "200": {"description": "Detalles del usuario"}
+                    }
+                },
+            },
+            "/viaje/propietario/{trip_id}": {
+                "get": {
+                    "summary": "Obtener Propietario del Viaje",
+                    "description": "Obtener el propietario de un viaje por su ID",
+                    "responses": {
+                        "200": {"description": "Detalles del propietario del viaje"}
+                    }
+                },
+            },
+            "/add-shop": {
+                "post": {
+                    "summary": "Añadir Tienda",
+                    "description": "Añadir una nueva tienda",
+                    "responses": {
+                        "201": {"description": "Tienda añadida exitosamente"}
+                    }
+                },
+            },
+            "/shops": {
+                "get": {
+                    "summary": "Obtener Tiendas",
+                    "description": "Obtener todas las tiendas",
+                    "responses": {
+                        "200": {"description": "Lista de tiendas"}
+                    }
+                },
+            },
+            "/add-product": {
+                "post": {
+                    "summary": "Añadir Producto",
+                    "description": "Añadir un nuevo producto",
+                    "responses": {
+                        "201": {"description": "Producto añadido exitosamente"}
+                    }
+                },
+            },
+            "/": {
+                "get": {
+                    "summary": "Health Check",
+                    "description": "Verificar que el servidor funcione correctamente",
+                    "responses": {
+                        "200": {"description": "El servidor está funcionando correctamente"}
+                    }
+                },
+            },
+        }
+    })
+
 # Decorador para proteger las rutas con autenticación JWT
 def token_required(f):
     @wraps(f)  # Usamos wraps para preservar la información de la función original
