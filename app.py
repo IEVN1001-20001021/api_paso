@@ -8,9 +8,11 @@ from functools import wraps
 import os
 from flask import request
 from werkzeug.utils import secure_filename
+from flask_socketio import SocketIO
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # Ajusta los orígenes según sea necesario
+socketio = SocketIO(app, cors_allowed_origins="*")
+CORS(app, resources={r"/*": {"origins": "*"}}) 
 
 # Configuración de la conexión a la base de datos
 db_config1 = {
@@ -192,6 +194,7 @@ def registrar_viaje(current_user):
             INSERT INTO viajes (usuario_id, departure_city, destination, arrival_date, return_date, cold_containers, hot_containers, comments)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         """
+        print("Ejecutando consulta SQL...")
         cursor.execute(query_insert_trip, (
             current_user,
             data['departureCity'],
@@ -202,11 +205,15 @@ def registrar_viaje(current_user):
             data['hotContainers'],
             data.get('comments', '')
         ))
+        connection.commit()
+        print("Viaje registrado exitosamente.")
 
         return jsonify({'message': 'Viaje registrado exitosamente.'}), 201
     except mysql.connector.Error as db_err:
+        print(f'Error en la base de datos: {str(db_err)}')
         return jsonify({'error': f'Error en la base de datos: {str(db_err)}'}), 500
     except Exception as e:
+        print(f'Error al registrar el viaje: {str(e)}')
         return jsonify({'error': f'Error al registrar el viaje: {str(e)}'}), 500
     finally:
         if 'cursor' in locals():
@@ -608,7 +615,7 @@ def add_card(current_user):
         # Insertar tarjeta en la base de datos
         query_insert_card = """
             INSERT INTO tarjetas (usuario_id, nombre_en_tarjeta, numero_enmascarado, fecha_expiracion, tipo_tarjeta, estado)
-            VALUES (%s, %s, %s, %s, %s);
+            VALUES (%s, %s, %s, %s, %s, %s);
         """
         cursor.execute(query_insert_card, (
             current_user,
@@ -716,7 +723,6 @@ def deactivate_card(current_user, card_id):
             cursor.close()
         if 'connection' in locals():
             connection.close()
-
             
 @app.route('/enviarPedido', methods=['POST'])
 @token_required
@@ -750,6 +756,12 @@ def enviar_pedido(current_user):
 
         # Confirmar los cambios
         connection.commit()
+        
+        # Emitir un evento de WebSocket para notificar a los clientes
+        socketio.emit('notification-update', {
+            'message': '¡Nuevo pedido recibido!',
+            'userId': data['userId']
+        })
 
         return jsonify({'message': 'Pedido enviado exitosamente.'}), 201
     except mysql.connector.Error as db_err:
@@ -769,12 +781,12 @@ def get_pending_orders(current_user):
         connection = mysql.connector.connect(**db_config)
         cursor = connection.cursor(dictionary=True)
 
-        # Filtrar pedidos con estado 'En Proceso' y notificación activa
+        # Filtrar pedidos con estado 'Pendiente' y notificación activa
         query = """
             SELECT p.* 
             FROM pedidos p
             INNER JOIN viajes v ON p.viaje_id = v.id
-            WHERE p.estado = 'En Proceso' 
+            WHERE p.estado = 'Pendiente' 
               AND p.notification = 'activa'
               AND v.usuario_id = %s
         """
@@ -792,7 +804,6 @@ def get_pending_orders(current_user):
             cursor.close()
         if 'connection' in locals():
             connection.close()
-
 
 @app.route('/pedidos/aceptados', methods=['GET'])
 @token_required
@@ -824,7 +835,6 @@ def get_accepted_orders(current_user):
             cursor.close()
         if 'connection' in locals():
             connection.close()
-
 
 @app.route('/pedidos/rechazados', methods=['GET'])
 @token_required
@@ -952,16 +962,41 @@ def discard_notification(current_user, order_id):
 @app.route('/pedidos/<int:order_id>/estado', methods=['PUT'])
 @token_required
 def update_order_state(current_user, order_id):
-    data = request.json
-    new_state = data.get('state')
-    connection = mysql.connector.connect(**db_config)
-    cursor = connection.cursor()
+    try:
+        # Leer el cuerpo de la solicitud
+        data = request.json
+        new_state = data.get('state')
 
-    query = "UPDATE pedidos SET estado = %s WHERE id = %s"
-    cursor.execute(query, (new_state, order_id))
-    connection.commit()
+        # Verificar que el estado no esté vacío
+        if not new_state:
+            return jsonify({'error': 'El estado es requerido'}), 400
 
-    return jsonify({'message': 'Estado actualizado correctamente'}), 200
+        # Conexión a la base de datos
+        connection = mysql.connector.connect(**db_config)
+        cursor = connection.cursor()
+
+        # Actualizar el estado en la base de datos
+        query = "UPDATE pedidos SET estado = %s WHERE id = %s"
+        cursor.execute(query, (new_state, order_id))
+        connection.commit()
+
+        # Emitir un evento de WebSocket para notificar a los clientes
+        socketio.emit('notification-update', {
+            'type': new_state.lower(),  # 'aceptado', 'rechazado', etc.
+            'order_id': order_id
+        })
+
+        return jsonify({'message': 'Estado actualizado correctamente'}), 200
+
+    except mysql.connector.Error as db_err:
+        return jsonify({'error': f'Error en la base de datos: {str(db_err)}'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Error en el servidor: {str(e)}'}), 500
+    finally:
+        if 'cursor' in locals():
+            cursor.close()
+        if 'connection' in locals():
+            connection.close()
 
 @app.route('/pedidos/<int:order_id>/entregado', methods=['PUT'])
 @token_required
@@ -1177,5 +1212,11 @@ def add_product():
 def health_check():
     return jsonify({'message': 'El servidor está funcionando correctamente.'})
 
+@socketio.on('connect')
+def handle_connect():
+    print('Cliente conectado')
+    return {'message': 'Conexión exitosa'}
+
+# Iniciar SocketIO
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000)
