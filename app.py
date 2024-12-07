@@ -17,17 +17,11 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 CORS(app, resources={r"/*": {"origins": "*"}}) 
 
 # Configuración de la conexión a la base de datos
-db_config1 = {
+db_config = {
     'host': 'localhost',
     'user': 'root',
     'password': '',
     'database': 'paso_db'
-}
-db_config = {
-    'host': 'sql3.freemysqlhosting.net',
-    'user': 'sql3747431',
-    'password': '9y5KxSxbML',
-    'database': 'sql3747431'
 }
 
 # Configuración para Swagger
